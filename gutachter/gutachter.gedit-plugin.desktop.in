@@ -1,0 +1,9 @@
+[Gedit Plugin]
+Module=devhelp
+IAge=2
+_Name=Devhelp Completion
+_Description=Get tips from Devhelp while you write
+Icon=devhelp
+Authors=Ignacio Casal Quinteiro <icq@gnome.org>
+Copyright=Copyright @ 2009 Ignacio Casal Quinteiro
+Website=http://www.gedit.org
