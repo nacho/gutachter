@@ -104,22 +104,21 @@ set_file (WindowData *data,
 {
 	GutachterSuite* suite;
 
-	suite = gutachter_runner_get_suite (GUTACHTER_RUNNER (data->widget));
-
-	if (data->status_handler && suite)
+	if (data->status_handler)
 	{
-		g_signal_handler_disconnect (suite,
+		g_signal_handler_disconnect (gutachter_runner_get_suite (GUTACHTER_RUNNER (data->widget)),
 					     data->status_handler);
 		data->status_handler = 0;
 	}
 
 	gutachter_runner_set_file (GUTACHTER_RUNNER (data->widget), file);
+	suite = gutachter_runner_get_suite (GUTACHTER_RUNNER (data->widget));
 
 	if (suite)
 	{
 		data->status_handler = g_signal_connect (suite, "notify::status",
 		                                         G_CALLBACK (status_changed_cb),
-		                                         data->widget);
+		                                         data);
 		status_changed_cb (G_OBJECT (suite), NULL, data);
 	}
 }
@@ -182,7 +181,9 @@ gutachter_suite_execute (GutachterSuite* self)
 	}
 	else
 	{
-		GIOChannel* channel = g_io_channel_unix_new (pipes[0]);
+		GIOChannel* channel;
+
+		channel = g_io_channel_unix_new (pipes[0]);
 		g_io_channel_set_encoding (channel, NULL, NULL);
 		g_io_channel_set_buffered (channel, FALSE);
 		g_io_channel_set_flags (channel, G_IO_FLAG_NONBLOCK, NULL);
@@ -204,6 +205,20 @@ on_execute_clicked (GtkButton  *button G_GNUC_UNUSED,
 		    WindowData *data)
 {
 	gutachter_suite_execute (gutachter_runner_get_suite (GUTACHTER_RUNNER (data->widget)));
+}
+
+static void
+test_suite_changed (GtkWidget  *widget,
+                    GParamSpec *pspec G_GNUC_UNUSED,
+                    gpointer    useless G_GNUC_UNUSED)
+{
+  GutachterSuite *suite;
+
+  suite = gutachter_runner_get_suite (GUTACHTER_RUNNER (widget));
+  if (suite)
+    {
+      gutachter_suite_load (suite);
+    }
 }
 
 static void
@@ -233,8 +248,8 @@ add_panel (GeditWindow *window,
 	data->execute_button = gtk_button_new_from_stock (GTK_STOCK_EXECUTE);
 	gtk_widget_show (data->execute_button);
 	gtk_box_pack_start (GTK_BOX (hbox), data->execute_button, FALSE, FALSE, 0);
-	/*gtk_widget_set_sensitive (GTK_WIDGET (data->execute_button),
-				  FALSE);*/
+	gtk_widget_set_sensitive (GTK_WIDGET (data->execute_button),
+				  FALSE);
 
 	g_signal_connect (data->execute_button, "clicked",
 			  G_CALLBACK (on_execute_clicked), data);
@@ -242,6 +257,9 @@ add_panel (GeditWindow *window,
 	data->widget = gtk_test_widget_new ();
 	gtk_widget_show (data->widget);
 	gtk_box_pack_start (GTK_BOX (box), data->widget, TRUE, TRUE, 0);
+
+	g_signal_connect (data->widget, "notify::test-suite",
+	                  G_CALLBACK (test_suite_changed), NULL);
 
 	panel = gedit_window_get_side_panel (window);
 
