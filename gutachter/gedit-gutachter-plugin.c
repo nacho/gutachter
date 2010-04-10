@@ -323,6 +323,9 @@ impl_deactivate (GeditPlugin *plugin,
 
 	data = g_object_get_data (G_OBJECT (window), WINDOW_DATA_KEY);
 
+	g_signal_handlers_disconnect_by_func (data->widget, test_suite_changed,
+					      data);
+
 	panel = gedit_window_get_side_panel (window);
 
 	gedit_panel_remove_item (panel, data->widget);
