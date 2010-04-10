@@ -14,7 +14,7 @@ libgutachter_la_SOURCES = \
 	gedit-gutachter-plugin.h \
 	gedit-gutachter-plugin.c
 
-libgutachter_la_LIBADD = $(GEDIT_DEVHELP_PLUGIN_LIBS)
+libgutachter_la_LIBADD = $(GEDIT_GUTACHTER_PLUGIN_LIBS)
 
 # Plugin Info
 

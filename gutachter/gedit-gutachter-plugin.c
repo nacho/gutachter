@@ -27,30 +27,26 @@
 
 #include "gedit-gutachter-plugin.h"
 
+#include <gutachter-widget.h>
+#include <gutachter-suite.h>
+#include <gutachter-runner.h>
+
 #include <gedit/gedit-debug.h>
 #include <gedit/gedit-window.h>
 
 #define WINDOW_DATA_KEY "GeditGutachterPluginDataKey"
 
-#define GEDIT_GUTACHTER_PLUGIN_GET_PRIVATE(object) \
-				(G_TYPE_INSTANCE_GET_PRIVATE ((object),	\
-				GEDIT_TYPE_GUTACHTER_PLUGIN,		\
-				GeditGutachterPluginPrivate))
-
-struct _GeditGutachterPluginPrivate
+typedef struct _WindowData
 {
+	GtkWidget *panel;
+	GtkWidget *widget;
+} WindowData;
 
-};
-
-GEDIT_PLUGIN_REGISTER_TYPE_WITH_CODE (GeditGutachterPlugin, gedit_gutachter_plugin,
-	gsc_provider_gutachter_register_type (type_module);
-)
+GEDIT_PLUGIN_REGISTER_TYPE (GeditGutachterPlugin, gedit_gutachter_plugin)
 
 static void
 gedit_gutachter_plugin_init (GeditGutachterPlugin *plugin)
 {
-	plugin->priv = GEDIT_GUTACHTER_PLUGIN_GET_PRIVATE (plugin);
-
 	gedit_debug_message (DEBUG_PLUGINS, "GeditGutachterPlugin initializing");
 }
 
@@ -65,25 +61,65 @@ gedit_gutachter_plugin_finalize (GObject *object)
 static void
 gedit_gutachter_plugin_dispose (GObject *object)
 {
-	GeditGutachterPlugin *plugin = GEDIT_GUTACHTER_PLUGIN (object);
-
 	gedit_debug_message (DEBUG_PLUGINS, "GeditGutachterPlugin disposing");
 
 	G_OBJECT_CLASS (gedit_gutachter_plugin_parent_class)->dispose (object);
 }
 
 static void
+free_window_data (gpointer data)
+{
+	WindowData *wdata = (WindowData *)data;
+
+	g_slice_free (WindowData, data);
+}
+
+static void
+add_panel (GeditWindow *window,
+	   WindowData  *data)
+{
+	GeditPanel *panel;
+
+	data->widget = gtk_test_widget_new ();
+
+	panel = gedit_window_get_side_panel (window);
+
+	gedit_panel_add_item (panel,
+			      data->widget,
+			      "Gutachter",
+			      NULL);
+}
+
+static void
 impl_activate (GeditPlugin *plugin,
 	       GeditWindow *window)
 {
+	WindowData *data;
 
+	data = g_slice_new (WindowData);
+
+	add_panel (window, data);
+
+	g_object_set_data_full (G_OBJECT (window),
+				WINDOW_DATA_KEY,
+				data,
+				free_window_data);
 }
 
 static void
 impl_deactivate (GeditPlugin *plugin,
 		 GeditWindow *window)
 {
+	WindowData *data;
+	GeditPanel *panel;
 
+	data = g_object_get_data (G_OBJECT (window), WINDOW_DATA_KEY);
+
+	panel = gedit_window_get_side_panel (window);
+
+	gedit_panel_remove_item (panel, data->widget);
+
+	g_object_set_data (G_OBJECT (window), WINDOW_DATA_KEY, NULL);
 }
 
 static void
@@ -97,6 +133,4 @@ gedit_gutachter_plugin_class_init (GeditGutachterPluginClass *klass)
 
 	plugin_class->activate = impl_activate;
 	plugin_class->deactivate = impl_deactivate;
-
-	//g_type_class_add_private (object_class, sizeof (GeditGutachterPluginPrivate));
 }
