@@ -32,6 +32,7 @@
 #include <gutachter-widget.h>
 #include <gutachter-suite.h>
 #include <gutachter-runner.h>
+#include <gutachter-xvfb.h>
 
 #include <gedit/gedit-debug.h>
 #include <gedit/gedit-window.h>
@@ -39,6 +40,11 @@
 #include <glib/gi18n.h>
 
 #define WINDOW_DATA_KEY "GeditGutachterPluginDataKey"
+
+#define GEDIT_GUTACHTER_PLUGIN_GET_PRIVATE(object) \
+				(G_TYPE_INSTANCE_GET_PRIVATE ((object),	\
+				GEDIT_TYPE_GUTACHTER_PLUGIN,		\
+				GeditGutachterPluginPrivate))
 
 typedef struct _WindowData
 {
@@ -48,12 +54,21 @@ typedef struct _WindowData
 	glong status_handler;
 } WindowData;
 
+struct _GeditGutachterPluginPrivate
+{
+	GutachterXvfb* xvfb;
+};
+
 GEDIT_PLUGIN_REGISTER_TYPE (GeditGutachterPlugin, gedit_gutachter_plugin)
 
 static void
 gedit_gutachter_plugin_init (GeditGutachterPlugin *plugin)
 {
+	plugin->priv = GEDIT_GUTACHTER_PLUGIN_GET_PRIVATE (plugin);
+
 	gedit_debug_message (DEBUG_PLUGINS, "GeditGutachterPlugin initializing");
+
+	plugin->priv->xvfb = gutachter_xvfb_get_instance ();
 }
 
 static void
@@ -67,7 +82,15 @@ gedit_gutachter_plugin_finalize (GObject *object)
 static void
 gedit_gutachter_plugin_dispose (GObject *object)
 {
+	GeditGutachterPlugin *plugin = GEDIT_GUTACHTER_PLUGIN (object);
+
 	gedit_debug_message (DEBUG_PLUGINS, "GeditGutachterPlugin disposing");
+
+	if (plugin->priv->xvfb != NULL)
+	{
+		g_object_unref (plugin->priv->xvfb);
+		plugin->priv->xvfb = NULL;
+	}
 
 	G_OBJECT_CLASS (gedit_gutachter_plugin_parent_class)->dispose (object);
 }
@@ -87,6 +110,7 @@ status_changed_cb (GObject    *suite,
 {
 	switch (gutachter_suite_get_status (GUTACHTER_SUITE (suite)))
 	{
+		case GUTACHTER_SUITE_LOADED:
 		case GUTACHTER_SUITE_FINISHED:
 			gtk_widget_set_sensitive (GTK_WIDGET (data->execute_button),
 						  TRUE);
@@ -161,7 +185,7 @@ on_open_clicked (GtkButton   *button G_GNUC_UNUSED,
 }
 
 static void
-gutachter_suite_execute (GutachterSuite* self)
+gutachter_suite_execute (GutachterSuite *self)
 {
 	GPid           pid = 0;
 	int            pipes[2];
@@ -210,15 +234,19 @@ on_execute_clicked (GtkButton  *button G_GNUC_UNUSED,
 static void
 test_suite_changed (GtkWidget  *widget,
                     GParamSpec *pspec G_GNUC_UNUSED,
-                    gpointer    useless G_GNUC_UNUSED)
+                    WindowData *data)
 {
-  GutachterSuite *suite;
+	GutachterSuite *suite;
+	GFile *file;
 
-  suite = gutachter_runner_get_suite (GUTACHTER_RUNNER (widget));
-  if (suite)
-    {
-      gutachter_suite_load (suite);
-    }
+	file = gutachter_runner_get_file (GUTACHTER_RUNNER (widget));
+	gtk_widget_set_sensitive (data->execute_button, file != NULL);
+
+	suite = gutachter_runner_get_suite (GUTACHTER_RUNNER (widget));
+	if (suite)
+	{
+		gutachter_suite_load (suite);
+	}
 }
 
 static void
@@ -259,7 +287,7 @@ add_panel (GeditWindow *window,
 	gtk_box_pack_start (GTK_BOX (box), data->widget, TRUE, TRUE, 0);
 
 	g_signal_connect (data->widget, "notify::test-suite",
-	                  G_CALLBACK (test_suite_changed), NULL);
+	                  G_CALLBACK (test_suite_changed), data);
 
 	panel = gedit_window_get_side_panel (window);
 
@@ -313,4 +341,6 @@ gedit_gutachter_plugin_class_init (GeditGutachterPluginClass *klass)
 
 	plugin_class->activate = impl_activate;
 	plugin_class->deactivate = impl_deactivate;
+
+	g_type_class_add_private (object_class, sizeof (GeditGutachterPluginPrivate));
 }

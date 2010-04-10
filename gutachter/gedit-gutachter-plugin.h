@@ -40,6 +40,9 @@ G_BEGIN_DECLS
 #define GEDIT_IS_GUTACHTER_PLUGIN_CLASS(k)	(G_TYPE_CHECK_CLASS_TYPE ((k), GEDIT_TYPE_GUTACHTER_PLUGIN))
 #define GEDIT_GUTACHTER_PLUGIN_GET_CLASS(o)	(G_TYPE_INSTANCE_GET_CLASS ((o), GEDIT_TYPE_GUTACHTER_PLUGIN, GeditGutachterPluginClass))
 
+/* Private structure type */
+typedef struct _GeditGutachterPluginPrivate	GeditGutachterPluginPrivate;
+
 /*
  * Main object structure
  */
@@ -48,6 +51,8 @@ typedef struct _GeditGutachterPlugin		GeditGutachterPlugin;
 struct _GeditGutachterPlugin
 {
 	GeditPlugin parent_instance;
+
+	GeditGutachterPluginPrivate *priv;
 };
 
 /*
