@@ -50,7 +50,7 @@ typedef struct _WindowData
 {
 	GtkWidget *panel;
 	GtkWidget *widget;
-	GtkWidget *execute_button;
+	GtkToolItem *execute_button;
 	glong status_handler;
 } WindowData;
 
@@ -148,7 +148,7 @@ set_file (WindowData *data,
 }
 
 static void
-on_open_clicked (GtkButton   *button G_GNUC_UNUSED,
+on_open_clicked (GtkToolItem *button G_GNUC_UNUSED,
                  GeditWindow *window)
 {
 	GtkFileFilter *filter;
@@ -225,8 +225,8 @@ gutachter_suite_execute (GutachterSuite *self)
 }
 
 static void
-on_execute_clicked (GtkButton  *button G_GNUC_UNUSED,
-		    WindowData *data)
+on_execute_clicked (GtkToolItem *button G_GNUC_UNUSED,
+		    WindowData  *data)
 {
 	gutachter_suite_execute (gutachter_runner_get_suite (GUTACHTER_RUNNER (data->widget)));
 }
@@ -240,7 +240,7 @@ test_suite_changed (GtkWidget  *widget,
 	GFile *file;
 
 	file = gutachter_runner_get_file (GUTACHTER_RUNNER (widget));
-	gtk_widget_set_sensitive (data->execute_button, file != NULL);
+	gtk_widget_set_sensitive (GTK_WIDGET (data->execute_button), file != NULL);
 
 	suite = gutachter_runner_get_suite (GUTACHTER_RUNNER (widget));
 	if (suite)
@@ -254,28 +254,28 @@ add_panel (GeditWindow *window,
 	   WindowData  *data)
 {
 	GtkWidget *box;
-	GtkWidget *hbox;
-	GtkWidget *open_button;
-	GtkWidget *execute;
+	GtkWidget *toolbar;
+	GtkToolItem *open_button;
+	GtkToolItem *execute;
 	GeditPanel *panel;
 
 	box = gtk_vbox_new (FALSE, 0);
 	gtk_widget_show (box);
 
-	hbox = gtk_hbox_new (FALSE, 0);
-	gtk_widget_show (hbox);
-	gtk_box_pack_start (GTK_BOX (box), hbox, FALSE, FALSE, 0);
+	toolbar = gtk_toolbar_new ();
+	gtk_widget_show (toolbar);
+	gtk_box_pack_start (GTK_BOX (box), toolbar, FALSE, FALSE, 0);
 
-	open_button = gtk_button_new_from_stock (GTK_STOCK_OPEN);
-	gtk_widget_show (open_button);
-	gtk_box_pack_start (GTK_BOX (hbox), open_button, FALSE, FALSE, 0);
+	open_button = gtk_tool_button_new_from_stock (GTK_STOCK_OPEN);
+	gtk_widget_show (GTK_WIDGET (open_button));
+	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), open_button, -1);
 
 	g_signal_connect (open_button, "clicked",
 			  G_CALLBACK (on_open_clicked), window);
 
-	data->execute_button = gtk_button_new_from_stock (GTK_STOCK_EXECUTE);
-	gtk_widget_show (data->execute_button);
-	gtk_box_pack_start (GTK_BOX (hbox), data->execute_button, FALSE, FALSE, 0);
+	data->execute_button = gtk_tool_button_new_from_stock (GTK_STOCK_EXECUTE);
+	gtk_widget_show (GTK_WIDGET (data->execute_button));
+	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), data->execute_button, -1);
 	gtk_widget_set_sensitive (GTK_WIDGET (data->execute_button),
 				  FALSE);
 
