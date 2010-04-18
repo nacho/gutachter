@@ -47,8 +47,8 @@ AM_GLIB_GNU_GETTEXT
 PKG_CHECK_MODULES(GEDIT_GUTACHTER_PLUGIN, [
 	glib-2.0 >= 2.16.0
 	gtk+-2.0 >= 2.16.0
-	gedit-2.20 >= 2.29.1
-	gutachter-0.0.1
+	gedit-2.20 >= 2.28.3
+	gutachter-0.0.2
 ])
 
 AC_ARG_ENABLE(deprecations,
