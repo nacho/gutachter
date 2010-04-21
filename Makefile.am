@@ -10,3 +10,5 @@ DISTCLEANFILES = 		\
 	intltool-extract 	\
 	intltool-merge 		\
 	intltool-update
+
+-include $(top_srcdir)/git.mk
