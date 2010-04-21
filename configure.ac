@@ -1,9 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 
-GEDIT_MAJOR=2.29.1
-GEDIT_GUTACHTER_PLUGIN_MAJOR=0.0.1
-
-AC_INIT(gedit-gutachter-plugin, 0.0.1, http://bugzilla.gnome.org/enter_bug.cgi?product=gedit)
+AC_INIT(gedit-gutachter-plugin, 0.0.2, http://bugzilla.gnome.org/enter_bug.cgi?product=gedit)
 
 AC_CONFIG_SRCDIR([gutachter])
 AC_CONFIG_MACRO_DIR([m4])
