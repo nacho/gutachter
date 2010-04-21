@@ -312,7 +312,7 @@ add_panel (GeditWindow *window,
 	g_signal_connect (data->auto_update, "toggled",
 			  G_CALLBACK (on_auto_update_toggled), data);
 
-	data->widget = gtk_test_widget_new ();
+	data->widget = gutachter_widget_new ();
 	gtk_widget_show (data->widget);
 	gtk_box_pack_start (GTK_BOX (box), data->widget, TRUE, TRUE, 0);
 
