@@ -264,8 +264,8 @@ add_panel (GeditWindow *window,
 			  G_CALLBACK (on_execute_clicked), data);
 
 	data->auto_update = gtk_toggle_tool_button_new_from_stock (GTK_STOCK_REFRESH);
-	gtk_widget_set_tooltip (GTK_WIDGET (data->auto_update),
-				_("Reload test if it changes"));
+	gtk_widget_set_tooltip_text (GTK_WIDGET (data->auto_update),
+				     _("Reload test if it changes"));
 	gtk_widget_show (GTK_WIDGET (data->auto_update));
 	gtk_toolbar_insert (GTK_TOOLBAR (toolbar), data->auto_update, -1);
 
