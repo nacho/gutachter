@@ -105,46 +105,6 @@ free_window_data (gpointer data)
 }
 
 static void
-gutachter_suite_execute (GutachterSuite *self)
-{
-	GPid           pid = 0;
-	int            pipes[2];
-
-	g_return_if_fail (GUTACHTER_IS_SUITE (self));
-
-	if (pipe (pipes))
-	{
-		perror ("pipe()");
-		return;
-	}
-
-	gutachter_suite_set_executed (self, 0);
-	if (!run_or_warn (&pid, pipes[1], MODE_TEST, self))
-	{
-		close (pipes[0]);
-	}
-	else
-	{
-		GIOChannel* channel;
-
-		channel = g_io_channel_unix_new (pipes[0]);
-		g_io_channel_set_encoding (channel, NULL, NULL);
-		g_io_channel_set_buffered (channel, FALSE);
-		g_io_channel_set_flags (channel, G_IO_FLAG_NONBLOCK, NULL);
-		g_io_add_watch (channel, G_IO_IN, io_func, self);
-		g_child_watch_add_full (G_PRIORITY_DEFAULT, pid, run_test_child_watch, self, NULL);
-
-		gutachter_suite_set_status (self, GUTACHTER_SUITE_RUNNING);
-		gutachter_suite_set_channel (self, channel);
-		g_io_channel_unref (channel);
-
-		gutachter_hierarchy_set_unsure (GUTACHTER_HIERARCHY (gutachter_suite_get_tree (self)));
-	}
-
-	close (pipes[1]);
-}
-
-static void
 status_changed_cb (GObject    *suite,
                    GParamSpec *pspec G_GNUC_UNUSED,
                    WindowData *data)
